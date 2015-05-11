@@ -1,11 +1,13 @@
-{-# LANGUAGE DeriveGeneric, OverloadedStrings #-}
-module Handler.Home where
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeFamilies #-}
+module Main where
 
-import Prelude
 import Control.Applicative
 import Control.Monad.IO.Class
 import Yesod
-import Import (Handler)
 
 import GHC.Generics
 import Data.Aeson
@@ -16,6 +18,18 @@ import Data.List (minimumBy)
 import Data.Graph.AStar
 import Data.Set (fromList)
 
+data App = App
+
+mkYesod "App" [parseRoutes|
+/ HomeR GET POST
+|]
+
+instance Yesod App
+
+main :: IO ()
+main = warp 3000 App
+
+-- fixing IP addresses to the source, like a boss
 server = "http://192.168.2.85:8080/"
 myName = "Jyri-Matti"
 client = "http://192.168.2.75:3000/"
