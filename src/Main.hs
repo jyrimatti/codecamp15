@@ -36,10 +36,10 @@ client = "http://192.168.2.75:3000/"
 
 register = do
      let d = U.decode $ BS.unpack $ encode $ Register myName client
-     putStrLn $ d
+     putStrLn d
      req <- simpleHTTP (postRequestWithBody (server ++ "register") "application/json" d)
      resp <- getResponseBody req
-     putStrLn $ resp
+     putStrLn resp
      return ()
 
 data Register = Register {
@@ -150,12 +150,13 @@ vastaa r = do
   --liftIO $ putStrLn $ U.decode $ BS.unpack $ encode r
   let vast = vastaus r
   liftIO $ putStrLn $ "********: " ++ show vast
-  return $ toJSON $ vast
+  return $ toJSON vast
   
 vastaus :: GameStateChanged -> Move
 vastaus (GameStateChanged (GameState (GameMap width height tiles) players items) (Player position@(Position x y) name url score money health usableItems)) =
    if (pelaajanRuudussaItem money position items) then PICK else
        let pos = if (not $ any (ostettava money) items) then maali tiles else _position $ valitseItem money position items
+           -- old stuff (without A*-search) commented away
            --suunnat = (paatteleToivottuSuunta position pos) ++ foo position pos ++ kaikkiViereiset position
            Just suunta = laske tiles pos position
            suunnat = [head suunta]
@@ -169,7 +170,7 @@ ostettava money (Item price discountPercent _ _ _) = todellinenHinta price disco
 pelaajanRuudussaItem money position items = any (\(price,discountPercent,pos) -> todellinenHinta price discountPercent < money && pos == position) (fmap (\(Item price discountPercent pos _ _) -> (price,discountPercent,pos)) items)
 
 todellinenHinta :: Int -> Int -> Int
-todellinenHinta price discountPercent = ceiling $ (toRational price)*(toRational (100-discountPercent) / 100)
+todellinenHinta price discountPercent = ceiling $ toRational price * (toRational (100 - discountPercent) / 100)
 
 suunnaksi player@(Position px py) target@(Position sx sy)
   | px < sx = RIGHT
@@ -180,7 +181,7 @@ suunnaksi player@(Position px py) target@(Position sx sy)
 vapaa tiles (Position x y) = tiles !! y !! x /= 'x'
 
 maali :: [String] -> Position
-maali tiles = head [Position x y | y <- [0..(length tiles - 1)], x <- [0..(length (tiles !! y) - 1)], (tiles !! y !! x == 'o')]
+maali tiles = head [Position x y | y <- [0..(length tiles - 1)], x <- [0..(length (tiles !! y) - 1)], tiles !! y !! x == 'o']
 
 paatteleToivottuSuunta (Position px py) (Position ix iy) =
   if abs (px - ix) < abs (py - iy) then
@@ -204,7 +205,7 @@ foo (Position px py) target@(Position sx sy) =
   if abs (px - sx) > abs (py - sy) then [Position px (py-1)] else [Position (px-1) py] 
 
 valitseItem money (Position px py) items = minimumBy (\i1 i2 -> if arvo i1 > arvo i2 then LT else GT) (filter (\(Item price discountPercent _ _ _) -> todellinenHinta price discountPercent < money) items) 
-    where arvo (Item price discountPercent (Position ix iy) _ _) = ceiling $ (toRational $ todellinenHinta price discountPercent) / toRational (abs (px-ix) + abs (py-iy))
+    where arvo (Item price discountPercent (Position ix iy) _ _) = ceiling $ toRational (todellinenHinta price discountPercent) / toRational (abs (px-ix) + abs (py-iy))
 
 laske tiles goal start = aStar (graph tiles) (\a b -> 1) (heur goal) (== goal) start 
 
