@@ -1,0 +1,20 @@
+Default: &defaults
+  database: codecamp15.sqlite3
+  poolsize: 10
+
+Development:
+  <<: *defaults
+
+Testing:
+  database: codecamp15_test.sqlite3
+  <<: *defaults
+
+Staging:
+  database: codecamp15_staging.sqlite3
+  poolsize: 100
+  <<: *defaults
+
+Production:
+  database: codecamp15_production.sqlite3
+  poolsize: 100
+  <<: *defaults
